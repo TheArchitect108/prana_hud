@@ -9,6 +9,7 @@ import 'package:prana_hud/models/breath_settings.dart';
 import '../models/breath.dart';
 import 'package:flutter/rendering.dart';
 import 'package:dart_numerics/dart_numerics.dart';
+import 'package:fast_noise/fast_noise.dart';
 
 enum VisualizationType {
   line,
@@ -43,7 +44,7 @@ class _WaveVisualizerState extends State<WaveVisualizer> {
   int bufferLength = 2048;
   double freqMax = 750;
   math.Random random = new math.Random();
-  List<AudioPlayer> breathPlayers = new List<AudioPlayer>();
+  List<AudioPlayer> breathPlayers = [];
   AudioPlayer noisePlayer;
   BreathUpdate _breathUpdate;
 
@@ -88,7 +89,7 @@ class _WaveVisualizerState extends State<WaveVisualizer> {
       p.setDevice(deviceIndex: widget.breathSettings.deviceID);
     } catch (e) {}
     p.setWaveSampleRate(44800);
-    p.setWaveType(2);
+    p.setWaveType(0);
     p.play();
     p.setVolume(widget.breathSettings.volume);
     p.setWaveAmplitude(.1);
@@ -189,11 +190,16 @@ class _WaveVisualizerState extends State<WaveVisualizer> {
         _buildSoundTicker(audioSpeed);
         audioTickRate = audioSpeed;
       }
+      //print(frequency);
+
       breathPlayers.forEach((element) async {
+        var freq = frequency + random.nextInt(50);
         if (element.id.isEven) {
-          element.setWaveFrequency(frequency + 60);
+          //freq = nthHarmonic(freq, 1);
+          element.setWaveFrequency(freq*1.8);
         } else {
-          element.setWaveFrequency(frequency + 30);
+          //freq = nthHarmonic(freq, 1);
+          element.setWaveFrequency(freq*1.4);
         }
       });
     });
@@ -203,9 +209,9 @@ class _WaveVisualizerState extends State<WaveVisualizer> {
   double mult = 1;
   double modifier;
   void modulate(int x, int groups, double progress, bool pos) {
-    audioSpeed = 500;
+    audioSpeed = 50;
     vizSpeed = 50;
-    harmonic = 2;
+    harmonic = 10;
     // wheel = 77
     // stargate = 18
     // hb 5
@@ -223,8 +229,12 @@ class _WaveVisualizerState extends State<WaveVisualizer> {
           ? dataArray[x] = (dataArray[x] + modifier).truncate()
           : dataArray[x] = (dataArray[x] - modifier).truncate();
       //dataArray[x] = ((progress * 100 * sin(group * mult) + modifier).toInt()).toInt();
-      //frequency = (dataArray[x] + (modifier)) * base;
-      frequency = (progress * 220);
+      //frequency = (dataArray[x] + (modifier)) * 200;
+      //frequency = (progress * 100);
+      f3(x) => 5 * sin(x.toDouble()) / x;
+      frequency = 250 * progress;
+
+      //print(frequency);
       //frequency = modifier * 220;
       freqMax = 9000;
       if (frequency > freqMax) {
